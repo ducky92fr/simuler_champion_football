@@ -1,0 +1,8 @@
+{
+  "env": {
+      "MONGO_USER": "duckytest",
+      "MONGO_PASSWORD": "ducbeo92",
+      "MONGO_DEFAULT_DATABASE": "simulation-football",
+      "SITE_URL": "http://localhost:3000"
+  }
+}
