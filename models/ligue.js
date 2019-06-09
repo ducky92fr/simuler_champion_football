@@ -14,22 +14,18 @@ const ligueSchema = new Schema({
   },
   calendrier: [
     {
+      _id: false,
       week: {
-        _id: false,
         type: Number,
         require: true
-      }
-      // matchs:[{
-      //  idTeam1: Schema.Types.ObjectId,
-      //  idTeam2: Schema.Types.ObjectId
-      // }]
-      // classement:[{
-      //   type:Schema.Types.ObjectId,
-      //   position:{
-      //     type:Number,
-      //     required:Number
-      //   }
-      // }]
+      },
+      matchs: [
+        [
+          {
+            type: Schema.Types.ObjectId
+          }
+        ]
+      ]
     }
   ]
 });

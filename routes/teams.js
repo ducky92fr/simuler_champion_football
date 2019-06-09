@@ -1,7 +1,10 @@
-const express = require ('express')
-const router = express.Router()
-const teamsController = require('../controller/teamsController')
+const express = require("express");
+const router = express.Router();
+const {
+  generateTeam,
+  generateLeague
+} = require("../controller/teamsController");
 
-router.post('/create',teamsController.generateTeam)
+router.post("/create", generateTeam, generateLeague);
 
-module.exports = router
+module.exports = router;

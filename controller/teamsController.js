@@ -5,46 +5,92 @@ const generateTeam = async (req, res, next) => {
   try {
     const { arrayTeam } = req.body;
 
-    //save all teams into teams collection
-    await Promise.all(
-      arrayTeam.map(el => {
+    //Await save all teams into teams collection
+    let array = await Promise.all(
+      arrayTeam.map(nameTeam => {
         const team = {
-          nom: el
+          nom: nameTeam
         };
         return Teams.create(team);
       })
     );
+    //add array team to req for the next middleware
+    req.teams = array.map(el => el._id);
+    next();
+  } catch (err) {
+    console.log(err);
+  }
+};
 
-    //Create a league
-    const numberTeams = arrayTeam.length;
-    //calcul number match for each phase aller or retour
-    const numberMatchEachPhase = (numberTeams * (numberTeams - 1)) / 2;
-    //calcul number match maximum per week
-    const numberMatchPerWeek = Math.floor(numberTeams / 2);
-    const numberWeekEachPhase = numberMatchEachPhase / numberMatchPerWeek;
-    const numberWeekAll = numberWeekEachPhase * 2;
-    const calendrier = [];
-    const arrayIdTeam = await Teams.find({}, "_id");
-    console.log(arrayIdTeam);
-    for (let i = 1; i <= numberWeekAll; i++) {
+const generateLeague = async (req, res, next) => {
+  try {
+    let { teams } = req;
+    let teamWithBye = [];
+    let teamShuffled = [teams[0]];
+    let matrix = [];
+    let calendrier = [];
+
+    //Check if number of teams is odd or even, if odd add a dummy team called "Bye"
+    teams.length % 2 === 1
+      ? (teamWithBye = [...teams, "Bye"])
+      : (teamWithBye = [...teams]);
+
+    const nbTeams = teamWithBye.length;
+    const midPoint = nbTeams / 2;
+
+    //Calcul for only one phase
+    const matchPhase = (nbTeams * (nbTeams - 1)) / 2;
+    const matchWeek = Math.floor(nbTeams / 2);
+    const roundPhase = matchPhase / matchWeek;
+
+    //This for loop to fixture all match with Round Robin algorithm
+    for (let i = 0; i < roundPhase; i++) {
+      if (i !== 0) {
+        for (let k = 1; k < nbTeams; k++) {
+          if (k === 1) {
+            teamShuffled[1] = teamWithBye[nbTeams - 1];
+          } else {
+            teamShuffled[k] = teamWithBye[k - 1];
+          }
+        }
+        teamWithBye = [...teamShuffled];
+        matrix[0] = teamShuffled.slice(0, midPoint);
+        matrix[1] = teamShuffled.slice(midPoint).reverse();
+      } else {
+        teamShuffled = [...teamWithBye];
+        matrix[0] = teamShuffled.slice(0, midPoint);
+        matrix[1] = teamShuffled.slice(midPoint).reverse();
+      }
+
+      //Create calendar
       const week = {
-        week: i
+        week: i + 1,
+        matchs: []
       };
+      for (let z = 0; z < midPoint; z++) {
+        const match = [matrix[0][z], matrix[1][z]];
+        if (!match.includes("Bye")) {
+          week.matchs.push(match);
+        }
+      }
       calendrier.push(week);
+      console.log(calendrier);
     }
-    const league = {
-      teams: arrayIdTeam,
-      numberWeeks: numberWeekAll,
+
+    //save ligue to db
+    const ligue = {
+      teams: teams,
+      numberWeeks: roundPhase * 2,
       calendrier: calendrier
     };
-    await League.create(league);
-
-    res.status(200).json({ message: "League is ready" });
+    await League.create(ligue);
+    res.status(200).json({ message: "ligue is ready" });
   } catch (err) {
     console.log(err);
   }
 };
 
 module.exports = {
-  generateTeam
+  generateTeam,
+  generateLeague
 };
