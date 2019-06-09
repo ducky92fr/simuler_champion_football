@@ -84,7 +84,7 @@ const generateLeague = async (req, res, next) => {
       calendrier: calendrier
     };
     await League.create(ligue);
-    res.status(200).json({ message: "ligue is ready" });
+    res.status(200).json({ message: "League is ready" });
   } catch (err) {
     console.log(err);
   }

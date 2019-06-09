@@ -5,6 +5,7 @@ const ligueSchema = new Schema({
   teams: [
     {
       type: Schema.Types.ObjectId,
+      ref: "Team",
       required: true
     }
   ],
@@ -22,7 +23,8 @@ const ligueSchema = new Schema({
       matchs: [
         [
           {
-            type: Schema.Types.ObjectId
+            type: Schema.Types.ObjectId,
+            ref: "Team"
           }
         ]
       ]

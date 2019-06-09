@@ -3,7 +3,7 @@ const router = express.Router();
 const {
   generateTeam,
   generateLeague
-} = require("../controller/teamsController");
+} = require("../controller/leagueController");
 
 router.post("/create", generateTeam, generateLeague);
 
