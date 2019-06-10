@@ -4,9 +4,15 @@ const Classement = require("../models/classement");
 
 const generateTeam = async (req, res, next) => {
   try {
-    const { arrayTeam } = req.body;
+    //Before running a new simulation, drop all collection in DB, the reason is we dont manage season for now
+    await Promise.all([
+      Teams.collection.drop(),
+      League.collection.drop(),
+      Classement.collection.drop()
+    ]);
 
-    //Await save all teams into teams collection
+    const { arrayTeam } = req.body;
+    // Await save all teams into teams collection
     let array = await Promise.all(
       arrayTeam.map(nameTeam => {
         const team = {
@@ -15,6 +21,7 @@ const generateTeam = async (req, res, next) => {
         return Teams.create(team);
       })
     );
+
     //add array team to req for the next middleware
     req.teams = array.map(el => el._id);
     next();
@@ -47,6 +54,7 @@ const generateLeague = async (req, res, next) => {
     //This for loop to fixture all match with Round Robin algorithm
     for (let i = 0; i < roundPhase; i++) {
       if (i !== 0) {
+        ///Each round or each week, have to rotate arrayTeams following Round Robin method
         for (let k = 1; k < nbTeams; k++) {
           if (k === 1) {
             teamShuffled[1] = teamWithBye[nbTeams - 1];
@@ -64,18 +72,27 @@ const generateLeague = async (req, res, next) => {
       }
 
       //Create calendar
-      const week = {
+      const weekAller = {
         week: i + 1,
+        matchs: []
+      };
+      const weekRetour = {
+        week: i + 1 + roundPhase,
         matchs: []
       };
       for (let z = 0; z < midPoint; z++) {
         const match = [matrix[0][z], matrix[1][z]];
         if (!match.includes("Bye")) {
-          week.matchs.push(match);
+          weekAller.matchs.push(match);
+          weekRetour.matchs.push(match);
         }
       }
-      calendrier.push(week);
+      calendrier.push(weekAller, weekRetour);
     }
+    //Sort calendrier with week 1 to week N
+    calendrier.sort(function(a, b) {
+      return a.week - b.week;
+    });
 
     //Create classement for week 0 (week preparation)
     const classement = {

@@ -13,8 +13,8 @@ const playMatch = async (req, res, next) => {
     const calendar = [...result[0].calendrier];
     let currentScoreBoard = [...result[0].currentClassement.scoreBoard];
     let arrayPromise = [];
-    //Loop throug all weeks
-    for (let i = 0; i < 1; i++) {
+    //Loop throug all weeks , calendar.length will be number of weeks
+    for (let i = 0; i < calendar.length; i++) {
       //All match for that week
       const allMatchs = calendar[i].matchs;
 
@@ -45,17 +45,10 @@ const playMatch = async (req, res, next) => {
           return el.team.toString() == team2Id.toString();
         });
 
-        // Result Match that week given
-        const match = [
-          { team: team1Id, but: butsTeam1 },
-          { team: team2Id, but: butsTeam2 }
-        ];
-        classement.matchs.push(match);
-
         //update scoreBoard that week given (take the last score)
         const scoreTeam1 = currentScoreBoard[indexTeam1];
         const scoreTeam2 = currentScoreBoard[indexTeam2];
-        console.log(currentScoreBoard);
+        // console.log(currentScoreBoard);
         function updateScore(
           scoreBoard,
           result,
@@ -89,13 +82,38 @@ const playMatch = async (req, res, next) => {
           updateScore(scoreTeam1, "matchNul", team2Id, butsTeam1, butsTeam2);
           updateScore(scoreTeam2, "matchNul", team1Id, butsTeam2, butsTeam1);
         }
+
+        // Result Match that week given
+        const match = [
+          { team: team1Id, but: butsTeam1 },
+          { team: team2Id, but: butsTeam2 }
+        ];
+
+        classement.matchs.push(match);
       }
-      console.log("------------");
-      console.log(currentScoreBoard);
-      // arrayPromise.push(Classement.create(classement));
+      //Arrange all teams in currentScoreBoard before saving it into DB
+      //Classement will be based on score, differBut and butMarque
+      currentScoreBoard.sort(function(a, b) {
+        if (a.score === b.score) {
+          if (a.differBut === b.differBut) {
+            return b.butMarque - a.butMarque;
+          } else {
+            return b.differBut - a.differBut;
+          }
+        } else {
+          return b.score - a.score;
+        }
+      });
+
+      //Using JSON.stringify to deep clone array of object
+      classement.scoreBoard = currentScoreBoard.map(el =>
+        JSON.parse(JSON.stringify(el))
+      );
+      arrayPromise.push(Classement.create(classement));
     }
-    await Promise.all(arrayPromise);
-    res.json({ result: result });
+    const allWeeks = await Promise.all(arrayPromise);
+    console.log(allWeeks);
+    res.json({ message: "League ended" });
   } catch (err) {
     console.log(err);
   }

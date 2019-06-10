@@ -39,6 +39,7 @@ const classementSchema = new Schema({
       },
       matchNul: [
         {
+          _id: false,
           adversaireID: {
             type: Schema.Types.ObjectId,
             ref: "Team"
@@ -55,6 +56,7 @@ const classementSchema = new Schema({
       ],
       victoire: [
         {
+          _id: false,
           adversaireID: {
             type: Schema.Types.ObjectId,
             ref: "Team"
@@ -71,6 +73,7 @@ const classementSchema = new Schema({
       ],
       defaite: [
         {
+          _id: false,
           adversaireID: {
             type: Schema.Types.ObjectId,
             ref: "Team"
