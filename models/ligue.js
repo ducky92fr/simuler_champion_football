@@ -29,7 +29,11 @@ const ligueSchema = new Schema({
         ]
       ]
     }
-  ]
+  ],
+  currentClassement: {
+    type: Schema.Types.ObjectId,
+    ref: "Classement"
+  }
 });
 
 module.exports = mongoose.model("Ligue", ligueSchema);

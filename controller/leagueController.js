@@ -1,5 +1,6 @@
 const Teams = require("../models/teams");
 const League = require("../models/ligue");
+const Classement = require("../models/classement");
 
 const generateTeam = async (req, res, next) => {
   try {
@@ -74,14 +75,22 @@ const generateLeague = async (req, res, next) => {
         }
       }
       calendrier.push(week);
-      console.log(calendrier);
     }
 
+    //Create classement for week 0 (week preparation)
+    const classement = {
+      week: 0,
+      scoreBoard: teams.map(el => {
+        return { team: el };
+      })
+    };
+    const result = await Classement.create(classement);
     //save ligue to db
     const ligue = {
       teams: teams,
       numberWeeks: roundPhase * 2,
-      calendrier: calendrier
+      calendrier: calendrier,
+      currentClassement: result._id
     };
     await League.create(ligue);
     res.status(200).json({ message: "League is ready" });

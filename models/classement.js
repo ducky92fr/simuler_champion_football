@@ -3,11 +3,13 @@ const Schema = mongoose.Schema;
 
 const classementSchema = new Schema({
   week: {
-    type: Number
+    type: Number,
+    required: true
   },
   matchs: [
     [
       {
+        _id: false,
         team: {
           type: Schema.Types.ObjectId,
           ref: "Team"
@@ -18,8 +20,9 @@ const classementSchema = new Schema({
       }
     ]
   ],
-  classement: [
+  scoreBoard: [
     {
+      _id: false,
       team: {
         type: Schema.Types.ObjectId,
         ref: "Team"
@@ -34,6 +37,22 @@ const classementSchema = new Schema({
         required: true,
         default: 0
       },
+      matchNul: [
+        {
+          adversaireID: {
+            type: Schema.Types.ObjectId,
+            ref: "Team"
+          },
+          butMarque: {
+            type: Number,
+            default: 0
+          },
+          butEncaisse: {
+            type: Number,
+            default: 0
+          }
+        }
+      ],
       victoire: [
         {
           adversaireID: {
@@ -76,7 +95,7 @@ const classementSchema = new Schema({
         required: true,
         default: 0
       },
-      differnceBut: {
+      differBut: {
         type: Number,
         required: true,
         default: 0
