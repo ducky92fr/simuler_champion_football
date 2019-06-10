@@ -14,7 +14,7 @@ const playMatch = async (req, res, next) => {
     let currentScoreBoard = [...result[0].currentClassement.scoreBoard];
     let arrayPromise = [];
     //Loop throug all weeks
-    for (let i = 0; i < calendar.length; i++) {
+    for (let i = 0; i < 1; i++) {
       //All match for that week
       const allMatchs = calendar[i].matchs;
 
@@ -53,30 +53,46 @@ const playMatch = async (req, res, next) => {
         classement.matchs.push(match);
 
         //update scoreBoard that week given (take the last score)
-        const scoreBoardTeam1 = { ...currentScoreBoard[indexTeam1] };
-        const scoreBoardTeam2 = { ...currentScoreBoard[indexTeam2] };
+        const scoreTeam1 = currentScoreBoard[indexTeam1];
+        const scoreTeam2 = currentScoreBoard[indexTeam2];
+        console.log(currentScoreBoard);
+        function updateScore(
+          scoreBoard,
+          result,
+          idAdversaire,
+          butsOurTeam,
+          butsAdversaire
+        ) {
+          let score = 0;
+          if (result === "victoire") score = 3;
+          if (result === "defaite") score = 0;
+          if (result === "matchNul") score = 1;
+          scoreBoard.score += score;
+          scoreBoard.numberMatchPlayed += 1;
+          scoreBoard[result].push({
+            adversaireID: idAdversaire,
+            butMarque: butsOurTeam,
+            butEncaisse: butsAdversaire
+          });
+          scoreBoard.butMarque += butsOurTeam;
+          scoreBoard.butEncaisse += butsAdversaire;
+          scoreBoard.differBut += butsOurTeam - butsAdversaire;
+        }
+
         if (butsTeam1 > butsTeam2) {
-          currentScoreBoard[indexTeam1] = {
-            team: team1Id,
-            score: scoreBoardTeam1score + 3,
-            numberMatchPlayed: scoreBoardTeam1.numberMatchPlayed + 1,
-            matchNul: [...scoreBoardTeam1.matchNul],
-            victoire: [
-              ...scoreBoardTeam1.victoire,
-              {
-                adversaireID: team2Id,
-                butMarque: butsTeam1,
-                butEncaisse: team1Id
-              }
-            ],
-            defaite: [...scoreBoardTeam1.defaite],
-            butMarque: scoreBoardTeam1.butMarque + butsTeam1,
-            butEncaisse: scoreBoardTeam1.butEncaisse + butsTeam2,
-            differBut: scoreBoardTeam1.differBut + butsTeam1 - butsTeam2
-          };
+          updateScore(scoreTeam1, "victoire", team2Id, butsTeam1, butsTeam2);
+          updateScore(scoreTeam2, "defaite", team1Id, butsTeam2, butsTeam1);
+        } else if (butsTeam1 < butsTeam2) {
+          updateScore(scoreTeam1, "defaite", team2Id, butsTeam1, butsTeam2);
+          updateScore(scoreTeam2, "victoire", team1Id, butsTeam2, butsTeam1);
+        } else {
+          updateScore(scoreTeam1, "matchNul", team2Id, butsTeam1, butsTeam2);
+          updateScore(scoreTeam2, "matchNul", team1Id, butsTeam2, butsTeam1);
         }
       }
-      arrayPromise.push(Classement.create(classement));
+      console.log("------------");
+      console.log(currentScoreBoard);
+      // arrayPromise.push(Classement.create(classement));
     }
     await Promise.all(arrayPromise);
     res.json({ result: result });
