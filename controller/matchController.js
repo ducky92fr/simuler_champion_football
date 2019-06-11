@@ -143,7 +143,7 @@ const playOff = (req, res, next) => {
     //   week: i + 1,
     //   matchs: []
     // };
-    console.log(butsTeam1);
+
     const MaxButTeam1 = Math.round(Math.random() * nbButs);
     const MaxButTeam2 = Math.round(Math.random() * nbButs);
     const MinButTeam1 = Math.round(Math.random() * (nbButs - MaxButTeam2));
@@ -153,12 +153,12 @@ const playOff = (req, res, next) => {
     if (butsTeam1 === butsTeam2) {
       randomGoal(nbButs);
     }
+    return [butsTeam1, butsTeam2];
   }
   //Loop through all matchQuarter in that week given
   for (let i = 0; i < matchQuarter.length; i++) {
-    let butsTeam1 = 0;
-    let butsTeam2 = 0;
-    randomGoal(nbButs);
+    let [butsTeam1, butsTeam2] = randomGoal(nbButs);
+
     // console.log(butsTeam1);
     //Teams1 is at position 0 in matchQuarter[i] array
     //Teams 2 is at position 1 in matchQuarter[i] array
@@ -168,8 +168,9 @@ const playOff = (req, res, next) => {
       { team: team2Id, but: butsTeam2 }
     ];
     resultQuarter.push(resultMatch);
-    console.log(resultQuarter);
   }
+  console.log(resultQuarter);
+  console.log("-------");
   //Loop through match array to play quarter final
 };
 module.exports = { playMatch, playOff };
