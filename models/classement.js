@@ -104,7 +104,10 @@ const classementSchema = new Schema({
         default: 0
       }
     }
-  ]
+  ],
+  winner: {
+    type: Schema.Types.ObjectId
+  }
 });
 
 module.exports = mongoose.model("Classement", classementSchema);

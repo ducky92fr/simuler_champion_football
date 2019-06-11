@@ -1,6 +1,16 @@
 const Classement = require("../models/classement");
 const League = require("../models/ligue");
 
+function randomGoal(nbButs) {
+  const MaxButTeam1 = Math.round(Math.random() * nbButs);
+  const MaxButTeam2 = Math.round(Math.random() * nbButs);
+  const MinButTeam1 = Math.round(Math.random() * (nbButs - MaxButTeam2));
+  const MinButTeam2 = Math.round(Math.random() * (nbButs - MaxButTeam1));
+  const butsTeam1 = Math.round((MaxButTeam1 + MinButTeam1) / 2 - 0.1);
+  const butsTeam2 = Math.round((MaxButTeam2 + MinButTeam2) / 2 - 0.1);
+  return [butsTeam1, butsTeam2];
+}
+
 //this is for all matchs aller retour
 const playMatch = async (req, res, next) => {
   const nbButs = 7;
@@ -15,7 +25,6 @@ const playMatch = async (req, res, next) => {
     let currentScoreBoard = [...result[0].currentClassement.scoreBoard];
     let arrayPromise = [];
     //Loop throug all weeks , calendar.length will be number of weeks
-    console.log(calendar.length);
     for (let i = 0; i < calendar.length; i++) {
       //All match for that week
       const allMatchs = calendar[i].matchs;
@@ -28,12 +37,7 @@ const playMatch = async (req, res, next) => {
       };
       //Loop through all matchs in that week given
       for (let k = 0; k < allMatchs.length; k++) {
-        const MaxButTeam1 = Math.round(Math.random() * nbButs);
-        const MaxButTeam2 = Math.round(Math.random() * nbButs);
-        const MinButTeam1 = Math.round(Math.random() * (nbButs - MaxButTeam2));
-        const MinButTeam2 = Math.round(Math.random() * (nbButs - MaxButTeam1));
-        let butsTeam1 = Math.round((MaxButTeam1 + MinButTeam1) / 2 - 0.1);
-        let butsTeam2 = Math.round((MaxButTeam2 + MinButTeam2) / 2 - 0.1);
+        let [butsTeam1, butsTeam2] = randomGoal(nbButs);
 
         //Teams1 is at position 0 in allMatchs[k} array
         //Teams 2 is at position 1 in allMatchs[k} array
@@ -50,7 +54,7 @@ const playMatch = async (req, res, next) => {
         //update scoreBoard that week given (take the last score)
         const scoreTeam1 = currentScoreBoard[indexTeam1];
         const scoreTeam2 = currentScoreBoard[indexTeam2];
-        // console.log(currentScoreBoard);
+
         function updateScore(
           scoreBoard,
           result,
@@ -113,11 +117,13 @@ const playMatch = async (req, res, next) => {
       );
       arrayPromise.push(Classement.create(classement));
     }
+
     Promise.all(arrayPromise).then(() => console.log("Done saved all to DB"));
 
     //Take the 8 first teams are qualified to playoff from last round
     const teamsQualified = currentScoreBoard.slice(0, 8).map(el => el.team);
     req.teams = teamsQualified;
+    req.nbWeeks = calendar.length;
     next();
   } catch (err) {
     console.log(err);
@@ -125,52 +131,112 @@ const playMatch = async (req, res, next) => {
 };
 
 //This is for playoff
-const playOff = (req, res, next) => {
-  const nbButs = 7;
-  const { teams } = req;
+const playOff = async (req, res, next) => {
+  try {
+    const nbButs = 7;
+    const { teams, nbWeeks } = req;
 
-  //quarter final
-  //fixture match
-  const matchQuarter = [];
-  const resultQuarter = [];
-  for (let i = 0; i < teams.length / 2; i++) {
-    matchQuarter[i] = [teams[i], teams[i + 4]];
-  }
-  //Each week has one classement, in the end of each iteration save it to DB
+    //quarter final
+    //fixture match
+    const matchQuarter = [];
+    const resultQuarter = [];
+    const teamsSemiFinal = [];
+    const matchSemiFinal = [];
+    const resultSemiFinal = [];
+    const teamsFinal = [];
+    const matchFinal = [];
+    const resultFinal = [];
+    let winnerLeague = null;
 
-  function randomGoal(nbButs) {
-    // const classement = {
-    //   week: i + 1,
-    //   matchs: []
-    // };
-
-    const MaxButTeam1 = Math.round(Math.random() * nbButs);
-    const MaxButTeam2 = Math.round(Math.random() * nbButs);
-    const MinButTeam1 = Math.round(Math.random() * (nbButs - MaxButTeam2));
-    const MinButTeam2 = Math.round(Math.random() * (nbButs - MaxButTeam1));
-    butsTeam1 = Math.round((MaxButTeam1 + MinButTeam1) / 2 - 0.1);
-    butsTeam2 = Math.round((MaxButTeam2 + MinButTeam2) / 2 - 0.1);
-    if (butsTeam1 === butsTeam2) {
-      randomGoal(nbButs);
+    for (let i = 0; i < teams.length / 2; i++) {
+      matchQuarter[i] = [teams[i], teams[i + 4]];
     }
-    return [butsTeam1, butsTeam2];
-  }
-  //Loop through all matchQuarter in that week given
-  for (let i = 0; i < matchQuarter.length; i++) {
-    let [butsTeam1, butsTeam2] = randomGoal(nbButs);
+    //Loop through all matchQuarter in that week given
 
-    // console.log(butsTeam1);
-    //Teams1 is at position 0 in matchQuarter[i] array
-    //Teams 2 is at position 1 in matchQuarter[i] array
-    const [team1Id, team2Id] = matchQuarter[i];
-    const resultMatch = [
-      { team: team1Id, but: butsTeam1 },
-      { team: team2Id, but: butsTeam2 }
-    ];
-    resultQuarter.push(resultMatch);
+    for (let i = 0; i < matchQuarter.length; i++) {
+      let [butsTeam1, butsTeam2] = randomGoal(nbButs);
+      if (butsTeam1 === butsTeam2) {
+        randomGoal(nbButs);
+      }
+
+      //Teams1 is at position 0 in matchQuarter[i] array
+      //Teams 2 is at position 1 in matchQuarter[i] array
+      const [team1Id, team2Id] = matchQuarter[i];
+      resultQuarter.push([
+        { team: team1Id, but: butsTeam1 },
+        { team: team2Id, but: butsTeam2 }
+      ]);
+      const winnerQuarter = butsTeam1 > butsTeam2 ? team1Id : team2Id;
+      teamsSemiFinal.push(winnerQuarter);
+    }
+    const quaterFinal = {
+      week: nbWeeks + 1,
+      matchs: resultQuarter
+    };
+
+    //Semi final
+    for (let i = 0; i < teamsSemiFinal.length / 2; i++) {
+      matchSemiFinal[i] = [teamsSemiFinal[i], teamsSemiFinal[i + 2]];
+    }
+
+    for (let i = 0; i < matchSemiFinal.length; i++) {
+      let [butsTeam1, butsTeam2] = randomGoal(nbButs);
+      if (butsTeam1 === butsTeam2) {
+        randomGoal(nbButs);
+      }
+      //Teams1 is at position 0 in matchQuarter[i] array
+      //Teams 2 is at position 1 in matchQuarter[i] array
+      const [team1Id, team2Id] = matchSemiFinal[i];
+
+      resultSemiFinal.push([
+        { team: team1Id, but: butsTeam1 },
+        { team: team2Id, but: butsTeam2 }
+      ]);
+
+      const winnerSemi = butsTeam1 > butsTeam2 ? team1Id : team2Id;
+      teamsFinal.push(winnerSemi);
+    }
+    const semiFinal = {
+      week: nbWeeks + 2,
+      matchs: resultSemiFinal
+    };
+
+    //Final
+
+    for (let i = 0; i < teamsFinal.length / 2; i++) {
+      matchFinal[i] = [teamsFinal[i], teamsFinal[i + 1]];
+    }
+
+    for (let i = 0; i < matchFinal.length; i++) {
+      let [butsTeam1, butsTeam2] = randomGoal(nbButs);
+      if (butsTeam1 === butsTeam2) {
+        randomGoal(nbButs);
+      }
+
+      //Teams1 is at position 0 in matchQuarter[i] array
+      //Teams 2 is at position 1 in matchQuarter[i] array
+      const [team1Id, team2Id] = matchFinal[i];
+      resultFinal.push([
+        { team: team1Id, but: butsTeam1 },
+        { team: team2Id, but: butsTeam2 }
+      ]);
+      winnerLeague = butsTeam1 > butsTeam2 ? team1Id : team2Id;
+    }
+
+    const final = {
+      week: nbWeeks + 3,
+      matchs: resultFinal,
+      winner: winnerLeague
+    };
+
+    await Promise.all([
+      Classement.create(quaterFinal),
+      Classement.create(semiFinal),
+      Classement.create(final)
+    ]);
+    res.json({ message: "league done" });
+  } catch (err) {
+    console.log(err);
   }
-  console.log(resultQuarter);
-  console.log("-------");
-  //Loop through match array to play quarter final
 };
 module.exports = { playMatch, playOff };
