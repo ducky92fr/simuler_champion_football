@@ -234,7 +234,36 @@ const playOff = async (req, res, next) => {
       Classement.create(semiFinal),
       Classement.create(final)
     ]);
-    res.json({ message: "league done" });
+    console.log(nbWeeks);
+
+    const league = await Classement.find({ week: nbWeeks }, "-_id -__v")
+      .populate([
+        { path: "winner", model: "Team", select: "nom _id" },
+        { path: "matchs.team", model: "Team", select: "nom _id" },
+        {
+          path: "scoreBoard.matchNul.adversaireID",
+          model: "Team",
+          select: "nom _id"
+        },
+        {
+          path: "scoreBoard.victoire.adversaireID",
+          model: "Team",
+          select: "nom _id"
+        },
+        {
+          path: "scoreBoard.defaite.adversaireID",
+          model: "Team",
+          select: "nom _id"
+        },
+        {
+          path: "scoreBoard.team",
+          model: "Team",
+          select: "nom _id"
+        }
+      ])
+      .exec();
+
+    res.json({ message: "League Done", result: league });
   } catch (err) {
     console.log(err);
   }

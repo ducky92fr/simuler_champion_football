@@ -106,7 +106,8 @@ const classementSchema = new Schema({
     }
   ],
   winner: {
-    type: Schema.Types.ObjectId
+    type: Schema.Types.ObjectId,
+    ref: "Team"
   }
 });
 
