@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { playMatch } = require("../controller/matchController");
+const { playMatch, playOff } = require("../controller/matchController");
 
-router.get("/create", playMatch);
+router.get("/create", playMatch, playOff);
 
 module.exports = router;

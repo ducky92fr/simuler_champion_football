@@ -1,6 +1,7 @@
 const Classement = require("../models/classement");
 const League = require("../models/ligue");
 
+//this is for all matchs aller retour
 const playMatch = async (req, res, next) => {
   const nbButs = 7;
   try {
@@ -14,6 +15,7 @@ const playMatch = async (req, res, next) => {
     let currentScoreBoard = [...result[0].currentClassement.scoreBoard];
     let arrayPromise = [];
     //Loop throug all weeks , calendar.length will be number of weeks
+    console.log(calendar.length);
     for (let i = 0; i < calendar.length; i++) {
       //All match for that week
       const allMatchs = calendar[i].matchs;
@@ -35,8 +37,8 @@ const playMatch = async (req, res, next) => {
 
         //Teams1 is at position 0 in allMatchs[k} array
         //Teams 2 is at position 1 in allMatchs[k} array
-        const team1Id = allMatchs[k][0];
-        const team2Id = allMatchs[k][1];
+        const [team1Id, team2Id] = allMatchs[k];
+
         //Find index of each team in currentScoreBoard Array
         const indexTeam1 = currentScoreBoard.findIndex(
           el => el.team.toString() == team1Id.toString()
@@ -111,12 +113,63 @@ const playMatch = async (req, res, next) => {
       );
       arrayPromise.push(Classement.create(classement));
     }
-    const allWeeks = await Promise.all(arrayPromise);
-    console.log(allWeeks);
-    res.json({ message: "League ended" });
+    Promise.all(arrayPromise).then(() => console.log("Done saved all to DB"));
+
+    //Take the 8 first teams are qualified to playoff from last round
+    const teamsQualified = currentScoreBoard.slice(0, 8).map(el => el.team);
+    req.teams = teamsQualified;
+    next();
   } catch (err) {
     console.log(err);
   }
 };
 
-module.exports = { playMatch };
+//This is for playoff
+const playOff = (req, res, next) => {
+  const nbButs = 7;
+  const { teams } = req;
+
+  //quarter final
+  //fixture match
+  const matchQuarter = [];
+  const resultQuarter = [];
+  for (let i = 0; i < teams.length / 2; i++) {
+    matchQuarter[i] = [teams[i], teams[i + 4]];
+  }
+  //Each week has one classement, in the end of each iteration save it to DB
+
+  function randomGoal(nbButs) {
+    // const classement = {
+    //   week: i + 1,
+    //   matchs: []
+    // };
+    console.log(butsTeam1);
+    const MaxButTeam1 = Math.round(Math.random() * nbButs);
+    const MaxButTeam2 = Math.round(Math.random() * nbButs);
+    const MinButTeam1 = Math.round(Math.random() * (nbButs - MaxButTeam2));
+    const MinButTeam2 = Math.round(Math.random() * (nbButs - MaxButTeam1));
+    butsTeam1 = Math.round((MaxButTeam1 + MinButTeam1) / 2 - 0.1);
+    butsTeam2 = Math.round((MaxButTeam2 + MinButTeam2) / 2 - 0.1);
+    if (butsTeam1 === butsTeam2) {
+      randomGoal(nbButs);
+    }
+  }
+  //Loop through all matchQuarter in that week given
+  for (let i = 0; i < matchQuarter.length; i++) {
+    let butsTeam1 = 0;
+    let butsTeam2 = 0;
+    randomGoal(nbButs);
+    // console.log(butsTeam1);
+    //Teams1 is at position 0 in matchQuarter[i] array
+    //Teams 2 is at position 1 in matchQuarter[i] array
+    const [team1Id, team2Id] = matchQuarter[i];
+    const resultMatch = [
+      { team: team1Id, but: butsTeam1 },
+      { team: team2Id, but: butsTeam2 }
+    ];
+    resultQuarter.push(resultMatch);
+    console.log(resultQuarter);
+  }
+  //Loop through match array to play quarter final
+};
+module.exports = { playMatch, playOff };
