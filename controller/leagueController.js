@@ -101,7 +101,9 @@ const generateLeague = async (req, res, next) => {
         return { team: el };
       })
     };
-    const result = await Classement.create(classement);
+    let result = await Classement.create(classement);
+    console.log(result);
+    result = await result.populate("scoreBoard.team").execPopulate();
     //save ligue to db
     const ligue = {
       teams: teams,
@@ -110,7 +112,7 @@ const generateLeague = async (req, res, next) => {
       currentClassement: result._id
     };
     await League.create(ligue);
-    res.status(200).json({ message: "League is ready" });
+    res.status(200).json({ message: "League is ready", result: result });
   } catch (err) {
     console.log(err);
   }

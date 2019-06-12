@@ -118,12 +118,11 @@ const playMatch = async (req, res, next) => {
       arrayPromise.push(Classement.create(classement));
     }
 
-    Promise.all(arrayPromise).then(() => console.log("Done saved all to DB"));
-
     //Take the 8 first teams are qualified to playoff from last round
     const teamsQualified = currentScoreBoard.slice(0, 8).map(el => el.team);
     req.teams = teamsQualified;
     req.nbWeeks = calendar.length;
+    req.arrayPromise = arrayPromise;
     next();
   } catch (err) {
     console.log(err);
@@ -134,7 +133,7 @@ const playMatch = async (req, res, next) => {
 const playOff = async (req, res, next) => {
   try {
     const nbButs = 7;
-    const { teams, nbWeeks } = req;
+    const { teams, nbWeeks, arrayPromise } = req;
 
     //quarter final
     //fixture match
@@ -230,11 +229,11 @@ const playOff = async (req, res, next) => {
     };
 
     await Promise.all([
+      ...arrayPromise,
       Classement.create(quaterFinal),
       Classement.create(semiFinal),
       Classement.create(final)
     ]);
-    console.log(nbWeeks);
 
     const league = await Classement.find({ week: nbWeeks }, "-_id -__v")
       .populate([
