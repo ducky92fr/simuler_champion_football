@@ -54,7 +54,6 @@ const playMatch = async (req, res, next) => {
         //update scoreBoard that week given (take the last score)
         const scoreTeam1 = currentScoreBoard[indexTeam1];
         const scoreTeam2 = currentScoreBoard[indexTeam2];
-
         function updateScore(
           scoreBoard,
           result,
@@ -68,7 +67,8 @@ const playMatch = async (req, res, next) => {
           if (result === "matchNul") score = 1;
           scoreBoard.score += score;
           scoreBoard.numberMatchPlayed += 1;
-          scoreBoard[result].push({
+          scoreBoard[result].number += 1;
+          scoreBoard[result].matchs.push({
             adversaireID: idAdversaire,
             butMarque: butsOurTeam,
             butEncaisse: butsAdversaire
@@ -115,6 +115,7 @@ const playMatch = async (req, res, next) => {
       classement.scoreBoard = currentScoreBoard.map(el =>
         JSON.parse(JSON.stringify(el))
       );
+
       arrayPromise.push(Classement.create(classement));
     }
 
@@ -235,7 +236,7 @@ const playOff = async (req, res, next) => {
       Classement.create(final)
     ]);
 
-    const league = await Classement.find({ week: nbWeeks }, "-_id -__v")
+    const league = await Classement.find({}, "-_id -__v")
       .populate([
         { path: "winner", model: "Team", select: "nom _id" },
         { path: "matchs.team", model: "Team", select: "nom _id" },
@@ -261,8 +262,14 @@ const playOff = async (req, res, next) => {
         }
       ])
       .exec();
+    const finalWeek = league.filter(el => el.week === nbWeeks);
+    const matchs = league
+      .filter(el => el.week !== 0)
+      .map(el => {
+        return { week: el.week, matchs: el.matchs };
+      });
 
-    res.json({ message: "League Done", result: league });
+    res.json({ message: "League Done", finalWeek: finalWeek, matchs: matchs });
   } catch (err) {
     console.log(err);
   }

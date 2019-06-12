@@ -37,57 +37,81 @@ const classementSchema = new Schema({
         required: true,
         default: 0
       },
-      matchNul: [
-        {
-          _id: false,
-          adversaireID: {
-            type: Schema.Types.ObjectId,
-            ref: "Team"
-          },
-          butMarque: {
-            type: Number,
-            default: 0
-          },
-          butEncaisse: {
-            type: Number,
-            default: 0
+      matchNul: {
+        _id: false,
+        number: {
+          type: Number,
+          default: 0,
+          required: true
+        },
+        matchs: [
+          {
+            _id: false,
+            adversaireID: {
+              type: Schema.Types.ObjectId,
+              ref: "Team"
+            },
+            butMarque: {
+              type: Number,
+              default: 0
+            },
+            butEncaisse: {
+              type: Number,
+              default: 0
+            }
           }
-        }
-      ],
-      victoire: [
-        {
-          _id: false,
-          adversaireID: {
-            type: Schema.Types.ObjectId,
-            ref: "Team"
-          },
-          butMarque: {
-            type: Number,
-            default: 0
-          },
-          butEncaisse: {
-            type: Number,
-            default: 0
+        ]
+      },
+      victoire: {
+        _id: false,
+        number: {
+          type: Number,
+          default: 0,
+          required: true
+        },
+        matchs: [
+          {
+            _id: false,
+            adversaireID: {
+              type: Schema.Types.ObjectId,
+              ref: "Team"
+            },
+            butMarque: {
+              type: Number,
+              default: 0
+            },
+            butEncaisse: {
+              type: Number,
+              default: 0
+            }
           }
-        }
-      ],
-      defaite: [
-        {
-          _id: false,
-          adversaireID: {
-            type: Schema.Types.ObjectId,
-            ref: "Team"
-          },
-          butMarque: {
-            type: Number,
-            default: 0
-          },
-          butEncaisse: {
-            type: Number,
-            default: 0
+        ]
+      },
+      defaite: {
+        _id: false,
+        number: {
+          type: Number,
+          default: 0,
+          required: true
+        },
+        matchs: [
+          {
+            _id: false,
+            adversaireID: {
+              type: Schema.Types.ObjectId,
+              ref: "Team"
+            },
+            butMarque: {
+              type: Number,
+              default: 0
+            },
+            butEncaisse: {
+              type: Number,
+              default: 0
+            }
           }
-        }
-      ],
+        ]
+      },
       butMarque: {
         type: Number,
         required: true,

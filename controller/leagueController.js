@@ -5,12 +5,14 @@ const Classement = require("../models/classement");
 const generateTeam = async (req, res, next) => {
   try {
     //Before running a new simulation, drop all collection in DB, the reason is we dont manage season for now
-    await Promise.all([
-      Teams.collection.drop(),
-      League.collection.drop(),
-      Classement.collection.drop()
-    ]);
-
+    const hasData = await Classement.find({ week: 0 });
+    if (hasData.length > 0) {
+      await Promise.all([
+        Teams.collection.drop(),
+        League.collection.drop(),
+        Classement.collection.drop()
+      ]);
+    }
     const { arrayTeam } = req.body;
     // Await save all teams into teams collection
     let array = await Promise.all(
@@ -102,7 +104,7 @@ const generateLeague = async (req, res, next) => {
       })
     };
     let result = await Classement.create(classement);
-    console.log(result);
+
     result = await result.populate("scoreBoard.team").execPopulate();
     //save ligue to db
     const ligue = {
