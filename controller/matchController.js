@@ -8,7 +8,11 @@ function randomGoal(nbButs) {
   const MinButTeam2 = Math.round(Math.random() * (nbButs - MaxButTeam1));
   const butsTeam1 = Math.round((MaxButTeam1 + MinButTeam1) / 2 - 0.1);
   const butsTeam2 = Math.round((MaxButTeam2 + MinButTeam2) / 2 - 0.1);
-  return [butsTeam1, butsTeam2];
+  if(butsTeam1 === butsTeam2) {
+    return randomGoal(nbButs)
+  } else{
+    return [butsTeam1, butsTeam2];
+  }
 }
 
 //this is for all matchs aller retour
@@ -155,9 +159,6 @@ const playOff = async (req, res, next) => {
 
     for (let i = 0; i < matchQuarter.length; i++) {
       let [butsTeam1, butsTeam2] = randomGoal(nbButs);
-      if (butsTeam1 === butsTeam2) {
-        randomGoal(nbButs);
-      }
 
       //Teams1 is at position 0 in matchQuarter[i] array
       //Teams 2 is at position 1 in matchQuarter[i] array
@@ -181,9 +182,7 @@ const playOff = async (req, res, next) => {
 
     for (let i = 0; i < matchSemiFinal.length; i++) {
       let [butsTeam1, butsTeam2] = randomGoal(nbButs);
-      if (butsTeam1 === butsTeam2) {
-        randomGoal(nbButs);
-      }
+    
       //Teams1 is at position 0 in matchQuarter[i] array
       //Teams 2 is at position 1 in matchQuarter[i] array
       const [team1Id, team2Id] = matchSemiFinal[i];
@@ -209,9 +208,6 @@ const playOff = async (req, res, next) => {
 
     for (let i = 0; i < matchFinal.length; i++) {
       let [butsTeam1, butsTeam2] = randomGoal(nbButs);
-      if (butsTeam1 === butsTeam2) {
-        randomGoal(nbButs);
-      }
 
       //Teams1 is at position 0 in matchQuarter[i] array
       //Teams 2 is at position 1 in matchQuarter[i] array
